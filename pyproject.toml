@@ -1,7 +1,7 @@
 [project]
 name = "agreement-tracker"
 version = "0.1.0"
-description = "Extracts structured agreements (who owns what, by when) from pasted or uploaded text using Claude."
+description = "Extracts structured agreements (who owns what, by when) from pasted or uploaded text using OpenAI."
 requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "MIT" }
@@ -13,7 +13,7 @@ dependencies = [
     "psycopg[binary]>=3.1",
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
-    "anthropic>=0.34",
+    "openai>=1.40",
     "jinja2>=3.1",
     "python-multipart>=0.0.9",
 ]

@@ -1,4 +1,4 @@
-"""Cheap, local text cleanup that runs before anything is sent to Claude.
+"""Cheap, local text cleanup that runs before anything is sent to OpenAI.
 
 Stripping obvious noise in Python (instead of asking the model to ignore it)
 keeps extraction prompts shorter and cheaper.

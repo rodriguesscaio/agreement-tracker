@@ -13,7 +13,7 @@ a simple dashboard grouped by open vs. resolved.
 1. **`POST /extract`** accepts raw text (pasted, or an uploaded `.txt` file).
 2. The text is cleaned locally (timestamps, "X joined the call" messages, signatures stripped)
    and split into chunks on natural paragraph/speaker-turn boundaries.
-3. Each chunk is sent to **Claude** with a prompt that asks for *only* a JSON array matching the
+3. Each chunk is sent to **OpenAI** with a prompt that asks for *only* a JSON object matching the
    agreement schema below — no prose.
 4. Extracted agreements are validated and saved to **PostgreSQL**.
 5. **`GET /agreements`** returns them, optionally filtered by `status=open|resolved`.
@@ -24,9 +24,9 @@ a simple dashboard grouped by open vs. resolved.
 
 - **Python 3.11+**, **FastAPI** for the API
 - **PostgreSQL** for storage, **SQLAlchemy 2.0** for models, **Alembic** for migrations
-- **Anthropic API** (Claude) for extraction
+- **OpenAI API** (`gpt-4o-mini` by default, configurable) for extraction
 - **Jinja2** for the minimal dashboard page (server-rendered, no build step)
-- **pytest** for tests, with the Anthropic client faked out so the suite runs with no API key or
+- **pytest** for tests, with the OpenAI client faked out so the suite runs with no API key or
   live database beyond a local SQLite file
 
 ## MVP scope
@@ -71,13 +71,13 @@ app/
     dashboard.py           GET /dashboard (HTML)
   services/
     preprocessing.py       Noise stripping + paragraph-based chunking
-    extraction.py           Claude prompt + call + JSON parsing
+    extraction.py           OpenAI prompt + call + JSON parsing
   templates/
     dashboard.html          Minimal Jinja dashboard
 migrations/               Alembic environment + versions
 tests/
   fixtures/sample_meeting.txt   Sample transcript with a few agreements
-  fakes.py                       Fake Anthropic client used across tests
+  fakes.py                       Fake OpenAI client used across tests
   test_extraction_service.py     Unit tests: cleaning, chunking, parsing
   test_extract_endpoint.py        End-to-end: text in -> agreements stored
   test_agreements_endpoint.py      GET /agreements + status filtering
@@ -89,7 +89,7 @@ tests/
 
 - Python 3.11+
 - A running PostgreSQL instance (local, Docker, or hosted)
-- An [Anthropic API key](https://console.anthropic.com/)
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 
 ### 2. Install
 
@@ -103,7 +103,7 @@ pip install -e ".[dev]"
 
 ```bash
 cp .env.example .env
-# then edit .env with your ANTHROPIC_API_KEY and DATABASE_URL
+# then edit .env with your OPENAI_API_KEY and DATABASE_URL
 ```
 
 ### 4. Create the database and run migrations
@@ -139,7 +139,7 @@ Or just paste text into the form on `/dashboard`.
 pytest
 ```
 
-Tests use an in-memory SQLite database and a fake Anthropic client, so they run without network
+Tests use an in-memory SQLite database and a fake OpenAI client, so they run without network
 access, a real database, or an API key.
 
 ## Future Work

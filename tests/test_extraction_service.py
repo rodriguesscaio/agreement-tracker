@@ -3,7 +3,7 @@ import json
 from app.schemas import ExtractedAgreement
 from app.services.extraction import extract_agreements_from_text, extract_from_chunk
 from app.services.preprocessing import chunk_text, strip_noise
-from tests.fakes import FakeAnthropicClient
+from tests.fakes import FakeOpenAIClient
 
 
 def test_strip_noise_removes_timestamps_system_messages_and_signature():
@@ -45,17 +45,19 @@ def test_chunk_text_empty_input_returns_no_chunks():
     assert chunk_text("   \n\n  ") == []
 
 
-def test_extract_from_chunk_parses_json_array_from_claude():
-    payload = [
-        {
-            "source_text_excerpt": "I'll send the report by Friday.",
-            "owner": "Priya",
-            "commitment": "Send the report",
-            "deadline": "2025-10-03",
-            "confidence": "high",
-        }
-    ]
-    fake_client = FakeAnthropicClient(responses=[json.dumps(payload)])
+def test_extract_from_chunk_parses_json_object_from_openai():
+    payload = {
+        "agreements": [
+            {
+                "source_text_excerpt": "I'll send the report by Friday.",
+                "owner": "Priya",
+                "commitment": "Send the report",
+                "deadline": "2025-10-03",
+                "confidence": "high",
+            }
+        ]
+    }
+    fake_client = FakeOpenAIClient(responses=[json.dumps(payload)])
 
     result = extract_from_chunk("some chunk", client=fake_client)
 
@@ -66,7 +68,7 @@ def test_extract_from_chunk_parses_json_array_from_claude():
     assert result[0].confidence.value == "high"
 
 
-def test_extract_from_chunk_handles_markdown_fenced_json():
+def test_extract_from_chunk_accepts_bare_json_array():
     payload = [
         {
             "source_text_excerpt": "excerpt",
@@ -76,8 +78,7 @@ def test_extract_from_chunk_handles_markdown_fenced_json():
             "confidence": "medium",
         }
     ]
-    fenced = "```json\n" + json.dumps(payload) + "\n```"
-    fake_client = FakeAnthropicClient(responses=[fenced])
+    fake_client = FakeOpenAIClient(responses=[json.dumps(payload)])
 
     result = extract_from_chunk("some chunk", client=fake_client)
 
@@ -85,37 +86,88 @@ def test_extract_from_chunk_handles_markdown_fenced_json():
     assert result[0].deadline is None
 
 
+def test_extract_from_chunk_handles_markdown_fenced_json():
+    payload = {
+        "agreements": [
+            {
+                "source_text_excerpt": "excerpt",
+                "owner": "Marcus",
+                "commitment": "Review contracts",
+                "deadline": None,
+                "confidence": "medium",
+            }
+        ]
+    }
+    fenced = "```json\n" + json.dumps(payload) + "\n```"
+    fake_client = FakeOpenAIClient(responses=[fenced])
+
+    result = extract_from_chunk("some chunk", client=fake_client)
+
+    assert len(result) == 1
+    assert result[0].deadline is None
+
+
+def test_extract_from_chunk_skips_malformed_items_and_keeps_valid_ones():
+    payload = {
+        "agreements": [
+            {
+                "source_text_excerpt": "missing confidence",
+                "owner": "Rafael",
+                "commitment": "Write a fix",
+                "deadline": None,
+                # "confidence" intentionally omitted, mirroring a real
+                # OpenAI response that dropped a required field.
+            },
+            {
+                "source_text_excerpt": "I'll post the incident notice.",
+                "owner": "Yuki",
+                "commitment": "Post an incident notice",
+                "deadline": None,
+                "confidence": "high",
+            },
+        ]
+    }
+    fake_client = FakeOpenAIClient(responses=[json.dumps(payload)])
+
+    result = extract_from_chunk("some chunk", client=fake_client)
+
+    assert len(result) == 1
+    assert result[0].owner == "Yuki"
+
+
 def test_extract_from_chunk_returns_empty_list_when_no_agreements_found():
-    fake_client = FakeAnthropicClient(responses=["[]"])
+    fake_client = FakeOpenAIClient(responses=['{"agreements": []}'])
 
     result = extract_from_chunk("just small talk, no commitments here", client=fake_client)
 
     assert result == []
 
 
-def test_extract_agreements_from_text_sends_cleaned_text_to_claude():
+def test_extract_agreements_from_text_sends_cleaned_text_to_openai():
     raw_text = (
         "[10:02] Priya joined the call\n"
         "Priya: I'll send the budget by Friday, October 3rd.\n"
         "\n"
         "Best regards,\nPriya\n"
     )
-    payload = [
-        {
-            "source_text_excerpt": "I'll send the budget by Friday, October 3rd.",
-            "owner": "Priya",
-            "commitment": "Send the budget",
-            "deadline": "2025-10-03",
-            "confidence": "high",
-        }
-    ]
-    fake_client = FakeAnthropicClient(responses=[json.dumps(payload)])
+    payload = {
+        "agreements": [
+            {
+                "source_text_excerpt": "I'll send the budget by Friday, October 3rd.",
+                "owner": "Priya",
+                "commitment": "Send the budget",
+                "deadline": "2025-10-03",
+                "confidence": "high",
+            }
+        ]
+    }
+    fake_client = FakeOpenAIClient(responses=[json.dumps(payload)])
 
     agreements = extract_agreements_from_text(raw_text, client=fake_client)
 
     assert len(agreements) == 1
     assert agreements[0].owner == "Priya"
 
-    sent_content = fake_client.messages.calls[0]["messages"][0]["content"]
+    sent_content = fake_client.calls[0]["messages"][-1]["content"]
     assert "joined the call" not in sent_content
     assert "Best regards" not in sent_content

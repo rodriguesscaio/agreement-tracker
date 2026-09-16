@@ -1,0 +1,28 @@
+[Slack] #incident-checkout-500s
+
+2:03 PM Dana Ok: We're seeing a spike of 500s on /checkout since the last deploy. Can someone jump on this?
+
+Rafael Costa joined the channel
+
+2:04 PM Rafael Costa: On it. I'll pull the error logs and have a root cause posted here within the hour.
+
+2:11 PM Dana Ok: Thanks. In the meantime I'll roll back the deploy to the previous version to stop the bleeding.
+
+2:15 PM Yuki Tanaka joined the channel
+
+2:16 PM Yuki Tanaka: I can own the customer-facing status page update — I'll post an incident notice in the next 10 minutes.
+
+2:40 PM Rafael Costa: Found it — a null pointer in the discount-code validator when a cart has zero items. I'll write a fix and a regression test, PR up by tomorrow morning.
+
+2:42 PM Dana Ok: Nice work. Once that's merged, I'll handle the post-mortem doc and share it with the team by Friday.
+
+2:45 PM Yuki Tanaka: I might not get to writing the customer follow-up email today, depends on how the rest of my afternoon goes.
+
+2:50 PM Dana Ok: All good, no rush on that one.
+
+Recording stopped
+
+--
+Dana Ok
+Engineering Manager
+Sent from my iPhone

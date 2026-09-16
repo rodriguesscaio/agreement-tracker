@@ -1,10 +1,10 @@
 """End-to-end coverage: pasted/uploaded text goes in, structured agreements
-come out of Claude (mocked) and land in the database."""
+come out of OpenAI (mocked) and land in the database."""
 
 import json
 from pathlib import Path
 
-from tests.fakes import FakeAnthropicClient
+from tests.fakes import FakeOpenAIClient
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "sample_meeting.txt"
 
@@ -34,7 +34,7 @@ SAMPLE_PAYLOAD = [
 
 
 def test_extract_endpoint_extracts_and_stores_agreements(client, monkeypatch):
-    fake_client = FakeAnthropicClient(responses=[json.dumps(SAMPLE_PAYLOAD)])
+    fake_client = FakeOpenAIClient(responses=[json.dumps({"agreements": SAMPLE_PAYLOAD})])
     monkeypatch.setattr("app.services.extraction.get_client", lambda: fake_client)
 
     with FIXTURE_PATH.open("rb") as fixture_file:
@@ -54,7 +54,7 @@ def test_extract_endpoint_extracts_and_stores_agreements(client, monkeypatch):
 
 
 def test_extract_endpoint_accepts_pasted_text(client, monkeypatch):
-    fake_client = FakeAnthropicClient(responses=[json.dumps([SAMPLE_PAYLOAD[0]])])
+    fake_client = FakeOpenAIClient(responses=[json.dumps({"agreements": [SAMPLE_PAYLOAD[0]]})])
     monkeypatch.setattr("app.services.extraction.get_client", lambda: fake_client)
 
     response = client.post(

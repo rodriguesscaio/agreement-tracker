@@ -18,7 +18,7 @@ async def extract_agreements(
     db: Session = Depends(get_db),
 ) -> ExtractResponse | RedirectResponse:
     """Accepts pasted text or an uploaded .txt file, extracts agreements via
-    Claude, and persists them. Browser form submissions (Accept: text/html)
+    OpenAI, and persists them. Browser form submissions (Accept: text/html)
     are redirected back to the dashboard; API clients get the created
     agreements as JSON.
     """

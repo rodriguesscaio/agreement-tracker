@@ -6,9 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    anthropic_api_key: str = ""
+    openai_api_key: str = ""
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/agreement_tracker"
-    claude_model: str = "claude-sonnet-4-6"
+    openai_model: str = "gpt-4o-mini"
 
 
 @lru_cache

@@ -1,29 +1,42 @@
-"""A minimal fake standing in for the Anthropic SDK client in tests, so the
+"""A minimal fake standing in for the OpenAI SDK client in tests, so the
 extraction pipeline can be tested without hitting the real API."""
 
 
-class FakeTextBlock:
-    def __init__(self, text: str) -> None:
-        self.type = "text"
-        self.text = text
+class FakeMessage:
+    def __init__(self, content: str) -> None:
+        self.content = content
 
 
-class FakeMessageResponse:
-    def __init__(self, text: str) -> None:
-        self.content = [FakeTextBlock(text)]
+class FakeChoice:
+    def __init__(self, content: str) -> None:
+        self.message = FakeMessage(content)
 
 
-class FakeMessages:
+class FakeChatCompletion:
+    def __init__(self, content: str) -> None:
+        self.choices = [FakeChoice(content)]
+
+
+class FakeChatCompletions:
     def __init__(self, responses: list[str]) -> None:
         self._responses = list(responses)
         self.calls: list[dict] = []
 
-    def create(self, **kwargs) -> FakeMessageResponse:
+    def create(self, **kwargs) -> FakeChatCompletion:
         self.calls.append(kwargs)
-        text = self._responses.pop(0) if self._responses else "[]"
-        return FakeMessageResponse(text)
+        content = self._responses.pop(0) if self._responses else '{"agreements": []}'
+        return FakeChatCompletion(content)
 
 
-class FakeAnthropicClient:
+class FakeChat:
     def __init__(self, responses: list[str]) -> None:
-        self.messages = FakeMessages(responses)
+        self.completions = FakeChatCompletions(responses)
+
+
+class FakeOpenAIClient:
+    def __init__(self, responses: list[str]) -> None:
+        self.chat = FakeChat(responses)
+
+    @property
+    def calls(self) -> list[dict]:
+        return self.chat.completions.calls

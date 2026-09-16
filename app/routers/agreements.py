@@ -17,4 +17,4 @@ def list_agreements(
     stmt = select(Agreement).order_by(Agreement.created_at.desc())
     if status is not None:
         stmt = stmt.where(Agreement.status == status)
-    return list(db.execute(stmt).scalars().all())
+    return db.execute(stmt).scalars().all()

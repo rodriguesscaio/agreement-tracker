@@ -7,8 +7,6 @@ from app.models import AgreementStatus, Confidence
 
 
 class ExtractedAgreement(BaseModel):
-    """One agreement as returned by Claude, before it is persisted."""
-
     source_text_excerpt: str
     owner: str
     commitment: str

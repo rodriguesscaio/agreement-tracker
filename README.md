@@ -24,7 +24,7 @@ a simple dashboard grouped by open vs. resolved.
 
 ## Tech stack
 
-- **Python 3.11+**, **FastAPI** for the API
+- **Python 3.12+**, **FastAPI** for the API
 - **PostgreSQL** for storage, **SQLAlchemy 2.0** for models, **Alembic** for migrations
 - **OpenAI API** (`gpt-4o-mini` by default, configurable) for extraction
 - **Jinja2** for the minimal dashboard page (server-rendered, no build step)
@@ -89,7 +89,7 @@ tests/
 
 ### 1. Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - A running PostgreSQL instance (local, Docker, or hosted)
 - An [OpenAI API key](https://platform.openai.com/api-keys)
 

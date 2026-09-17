@@ -1,5 +1,7 @@
 # Agreement Tracker
 
+[![Tests](https://github.com/rodriguesscaio/agreement-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/rodriguesscaio/agreement-tracker/actions/workflows/tests.yml)
+
 Agreements made in meetings, chats, and emails — who owns what, by when — quietly get lost the
 moment the conversation ends. Agreement Tracker extracts structured commitments from pasted or
 uploaded text so they end up in one place instead of buried in a transcript nobody rereads.

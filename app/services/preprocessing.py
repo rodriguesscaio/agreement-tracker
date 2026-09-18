@@ -12,8 +12,10 @@ TIMESTAMP_PATTERNS = [
 ]
 
 SYSTEM_MESSAGE_PATTERN = re.compile(
-    r"^.{0,60}\b(joined|left|has joined|has left)\b.{0,20}\b(the call|the meeting|the chat|the room)\b.*$",
-    re.IGNORECASE,
+    r"^(?!.*:)"  # no colon anywhere: excludes real "Name: message" lines
+    r"[A-Z][\w'.-]*(?:\s+[A-Z][\w'.-]*){0,3}"  # a short Name / Name Lastname prefix
+    r"\s+(?:has\s+)?(?:joined|left)\b"  # joined/left, optionally "has joined"/"has left"
+    r"(?:\s+\S+){0,4}\.?$"  # a short trailing tail, e.g. "the channel", "the call", or nothing
 )
 
 CALL_LIFECYCLE_PATTERN = re.compile(
@@ -47,6 +49,12 @@ def strip_noise(text: str) -> str:
         if in_signature:
             continue
 
+        for pattern in TIMESTAMP_PATTERNS:
+            line = pattern.sub("", line).strip()
+
+        if not line:
+            continue
+
         if SIGNATURE_STARTERS.match(line):
             in_signature = True
             continue
@@ -54,11 +62,7 @@ def strip_noise(text: str) -> str:
         if SYSTEM_MESSAGE_PATTERN.match(line) or CALL_LIFECYCLE_PATTERN.match(line):
             continue
 
-        for pattern in TIMESTAMP_PATTERNS:
-            line = pattern.sub("", line).strip()
-
-        if line:
-            cleaned_lines.append(line)
+        cleaned_lines.append(line)
 
     # Collapse runs of blank lines left behind by stripped-out noise.
     result_lines: list[str] = []

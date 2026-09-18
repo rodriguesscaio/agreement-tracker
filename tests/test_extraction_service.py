@@ -27,6 +27,26 @@ def test_strip_noise_removes_timestamps_system_messages_and_signature():
     assert "Priya: Morning everyone." in cleaned
 
 
+def test_strip_noise_removes_join_leave_messages_regardless_of_platform_wording():
+    raw = (
+        "Rafael Costa joined the channel\n"
+        "2:15 PM Yuki Tanaka joined the channel\n"
+        "Ana has left the workspace\n"
+        "Bob left\n"
+        "\n"
+        "Rafael Costa: On it, I'll pull the logs.\n"
+        "Dana Ok: I'll roll back the deploy to stop the bleeding.\n"
+    )
+
+    cleaned = strip_noise(raw)
+
+    assert "joined the channel" not in cleaned
+    assert "left the workspace" not in cleaned
+    assert "Bob left" not in cleaned
+    assert "Rafael Costa: On it, I'll pull the logs." in cleaned
+    assert "Dana Ok: I'll roll back the deploy to stop the bleeding." in cleaned
+
+
 def test_chunk_text_splits_on_paragraph_boundaries_and_respects_max_chars():
     paragraphs = ["Paragraph one is short.", "Paragraph two is also short.", "Paragraph three."]
     text = "\n\n".join(paragraphs)

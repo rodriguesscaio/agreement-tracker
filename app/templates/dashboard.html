@@ -131,6 +131,17 @@
       font-style: italic;
     }
     .empty { color: var(--muted); font-size: 0.9rem; }
+    .resolve-form { margin-top: 0.6rem; }
+    .resolve-form button {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .resolve-form button:hover { background: var(--bg); }
   </style>
 </head>
 <body>
@@ -169,6 +180,9 @@
               <span class="badge {{ a.confidence.value }}">{{ a.confidence.value }} confidence</span>
             </div>
             <div class="excerpt">&ldquo;{{ a.source_text_excerpt }}&rdquo;</div>
+            <form class="resolve-form" action="/agreements/{{ a.id }}/resolve" method="post">
+              <button type="submit">Mark resolved</button>
+            </form>
           </article>
         {% endfor %}
       </section>

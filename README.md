@@ -20,7 +20,8 @@ a simple dashboard grouped by open vs. resolved.
 4. Extracted agreements are validated and saved to **PostgreSQL**.
 5. **`GET /agreements`** returns them, optionally filtered by `status=open|resolved`.
 6. **`/dashboard`** renders a minimal HTML page listing agreements grouped by status, with a form
-   to submit new text.
+   to submit new text and a button to mark an open agreement as resolved
+   (**`POST /agreements/{id}/resolve`**).
 
 ## Tech stack
 
@@ -39,7 +40,7 @@ them. In scope:
 - Extraction from pasted text or a single uploaded `.txt` file
 - Structured storage in Postgres
 - Listing agreements, filterable by status
-- A read-oriented dashboard
+- A dashboard to view agreements and mark one resolved
 
 See [Future Work](#future-work) for what's explicitly *not* built yet.
 
@@ -69,7 +70,7 @@ app/
   schemas.py             Pydantic request/response schemas
   routers/
     extract.py           POST /extract
-    agreements.py         GET /agreements
+    agreements.py         GET /agreements, POST /agreements/{id}/resolve
     dashboard.py           GET /dashboard (HTML)
   services/
     preprocessing.py       Noise stripping + paragraph-based chunking
@@ -82,7 +83,7 @@ tests/
   fakes.py                       Fake OpenAI client used across tests
   test_extraction_service.py     Unit tests: cleaning, chunking, parsing
   test_extract_endpoint.py        End-to-end: text in -> agreements stored
-  test_agreements_endpoint.py      GET /agreements + status filtering
+  test_agreements_endpoint.py      GET /agreements, status filtering, resolve endpoint
 ```
 
 ## Setup
@@ -152,5 +153,6 @@ Explicitly out of scope for this MVP:
   copy/paste)
 - **Auth / multi-user support** (workspaces, permissions, per-user agreement ownership)
 - **Notifications** (reminders as a deadline approaches, digest emails)
-- Editing/resolving agreements from the dashboard (currently read-only + extraction only)
+- Editing an agreement's fields (owner, commitment, deadline) after extraction
+- Re-opening a resolved agreement
 - Re-extraction / deduplication when the same conversation is pasted twice

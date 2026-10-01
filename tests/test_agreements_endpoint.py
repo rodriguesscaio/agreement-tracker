@@ -1,3 +1,4 @@
+import uuid
 from datetime import date
 
 from app.models import Agreement, AgreementStatus, Confidence
@@ -54,3 +55,34 @@ def test_list_agreements_rejects_invalid_status(client):
     response = client.get("/agreements", params={"status": "not-a-status"})
 
     assert response.status_code == 422
+
+
+def test_resolve_agreement_marks_it_resolved(client, db_session):
+    agreement = _make_agreement(db_session, status=AgreementStatus.open)
+
+    response = client.post(f"/agreements/{agreement.id}/resolve")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "resolved"
+
+    db_session.refresh(agreement)
+    assert agreement.status == AgreementStatus.resolved
+
+
+def test_resolve_agreement_redirects_for_html_form_submission(client, db_session):
+    agreement = _make_agreement(db_session, status=AgreementStatus.open)
+
+    response = client.post(
+        f"/agreements/{agreement.id}/resolve",
+        headers={"accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/dashboard"
+
+
+def test_resolve_agreement_404s_for_unknown_id(client):
+    response = client.post(f"/agreements/{uuid.uuid4()}/resolve")
+
+    assert response.status_code == 404

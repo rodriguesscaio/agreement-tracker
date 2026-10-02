@@ -24,6 +24,7 @@ class AgreementRead(BaseModel):
     deadline: date | None
     confidence: Confidence
     status: AgreementStatus
+    reminder_sent_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

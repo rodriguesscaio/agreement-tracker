@@ -131,8 +131,17 @@
       font-style: italic;
     }
     .empty { color: var(--muted); font-size: 0.9rem; }
-    .resolve-form { margin-top: 0.6rem; }
-    .resolve-form button {
+    .reminder-note {
+      margin-top: 0.5rem;
+      font-size: 0.76rem;
+      color: var(--accent);
+    }
+    .actions {
+      margin-top: 0.6rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .actions button {
       background: none;
       border: 1px solid var(--border);
       color: var(--text);
@@ -141,7 +150,8 @@
       font-size: 0.78rem;
       cursor: pointer;
     }
-    .resolve-form button:hover { background: var(--bg); }
+    .actions button:hover { background: var(--bg); }
+    .actions button.secondary { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -180,9 +190,17 @@
               <span class="badge {{ a.confidence.value }}">{{ a.confidence.value }} confidence</span>
             </div>
             <div class="excerpt">&ldquo;{{ a.source_text_excerpt }}&rdquo;</div>
-            <form class="resolve-form" action="/agreements/{{ a.id }}/resolve" method="post">
-              <button type="submit">Mark resolved</button>
-            </form>
+            {% if a.reminder_sent_at %}
+              <div class="reminder-note">Reminder sent {{ a.reminder_sent_at.strftime("%b %d, %H:%M") }}</div>
+            {% endif %}
+            <div class="actions">
+              <form action="/agreements/{{ a.id }}/remind" method="post">
+                <button type="submit" class="secondary">Send reminder</button>
+              </form>
+              <form action="/agreements/{{ a.id }}/resolve" method="post">
+                <button type="submit">Mark resolved</button>
+              </form>
+            </div>
           </article>
         {% endfor %}
       </section>

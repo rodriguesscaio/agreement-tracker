@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
@@ -38,6 +39,30 @@ def resolve_agreement(
         raise HTTPException(status_code=404, detail="Agreement not found")
 
     agreement.status = AgreementStatus.resolved
+    db.commit()
+    db.refresh(agreement)
+
+    if "text/html" in request.headers.get("accept", ""):
+        return RedirectResponse(url="/dashboard", status_code=303)
+
+    return agreement
+
+
+@router.post("/agreements/{agreement_id}/remind", response_model=AgreementRead)
+def remind_agreement(
+    agreement_id: uuid.UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Agreement | RedirectResponse:
+    """Marks an open agreement as reminded, recording when the reminder was
+    sent. This is a visual flag on the dashboard only — no email, push, or
+    other external notification is sent (see README Future Work).
+    """
+    agreement = db.get(Agreement, agreement_id)
+    if agreement is None:
+        raise HTTPException(status_code=404, detail="Agreement not found")
+
+    agreement.reminder_sent_at = datetime.now(UTC)
     db.commit()
     db.refresh(agreement)
 

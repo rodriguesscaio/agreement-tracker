@@ -20,8 +20,9 @@ a simple dashboard grouped by open vs. resolved.
 4. Extracted agreements are validated and saved to **PostgreSQL**.
 5. **`GET /agreements`** returns them, optionally filtered by `status=open|resolved`.
 6. **`/dashboard`** renders a minimal HTML page listing agreements grouped by status, with a form
-   to submit new text and a button to mark an open agreement as resolved
-   (**`POST /agreements/{id}/resolve`**).
+   to submit new text, a button to mark an open agreement as resolved
+   (**`POST /agreements/{id}/resolve`**), and a button to flag that a reminder was sent
+   (**`POST /agreements/{id}/remind`**) — a visual marker only, see Future Work below.
 
 ## Tech stack
 
@@ -57,6 +58,7 @@ See [Future Work](#future-work) for what's explicitly *not* built yet.
 | `deadline`               | date, nullable                | if a deadline was mentioned             |
 | `confidence`            | enum: `high` / `medium` / `low` | how explicitly the agreement was stated |
 | `status`                | enum: `open` / `resolved`     | defaults to `open`                      |
+| `reminder_sent_at`      | timestamp, nullable            | set when "Send reminder" is clicked on the dashboard |
 | `created_at`, `updated_at` | timestamps                 |                                          |
 
 ## Project layout
@@ -152,7 +154,12 @@ Explicitly out of scope for this MVP:
 - **Live integrations** with Slack, Microsoft Teams, or Google Chat (webhook ingestion instead of
   copy/paste)
 - **Auth / multi-user support** (workspaces, permissions, per-user agreement ownership)
-- **Notifications** (reminders as a deadline approaches, digest emails)
+- **Real notification delivery** — the dashboard's "Send reminder" button only records a
+  timestamp (`reminder_sent_at`); it does not send an actual email, push notification, or
+  Slack/Teams message. That requires capturing real contact info for the `owner` (today it's
+  just a free-text name with no auth/identity behind it) and wiring a delivery provider.
+- **Automated reminders** (e.g. triggered automatically as a deadline approaches, daily digest
+  emails) — today, sending a reminder is always a manual click
 - Editing an agreement's fields (owner, commitment, deadline) after extraction
 - Re-opening a resolved agreement
 - Re-extraction / deduplication when the same conversation is pasted twice

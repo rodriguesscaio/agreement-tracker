@@ -86,3 +86,37 @@ def test_resolve_agreement_404s_for_unknown_id(client):
     response = client.post(f"/agreements/{uuid.uuid4()}/resolve")
 
     assert response.status_code == 404
+
+
+def test_remind_agreement_sets_reminder_sent_at(client, db_session):
+    agreement = _make_agreement(db_session, status=AgreementStatus.open)
+    assert agreement.reminder_sent_at is None
+
+    response = client.post(f"/agreements/{agreement.id}/remind")
+
+    assert response.status_code == 200
+    assert response.json()["reminder_sent_at"] is not None
+
+    db_session.refresh(agreement)
+    assert agreement.reminder_sent_at is not None
+    # Sending a reminder is purely a visual flag; it must not change status.
+    assert agreement.status == AgreementStatus.open
+
+
+def test_remind_agreement_redirects_for_html_form_submission(client, db_session):
+    agreement = _make_agreement(db_session, status=AgreementStatus.open)
+
+    response = client.post(
+        f"/agreements/{agreement.id}/remind",
+        headers={"accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/dashboard"
+
+
+def test_remind_agreement_404s_for_unknown_id(client):
+    response = client.post(f"/agreements/{uuid.uuid4()}/remind")
+
+    assert response.status_code == 404
